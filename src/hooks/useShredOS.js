@@ -1127,6 +1127,101 @@ ${detectedMeal.name}
     URL.revokeObjectURL(url);
   };
 
+  const importFileRef = useRef(null);
+
+  const handleImportJSON = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (data.startDate) setStartDate(new Date(data.startDate));
+        if (data.checks) setChecks(data.checks);
+        if (data.weights) setWeights(data.weights);
+        if (data.streak) setStreak(data.streak);
+        if (data.messages) setMessages(data.messages);
+        if (data.apiKey) setApiKey(data.apiKey);
+        if (data.apiProvider) setApiProvider(data.apiProvider);
+        if (data.checklistItems) setChecklistItems(data.checklistItems);
+        if (data.bodyCompositions) setBodyCompositions(data.bodyCompositions);
+        if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
+        if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
+        if (data.syncCode) setSyncCode(data.syncCode);
+        if (data.workoutHistory) {
+          setWorkoutHistory(data.workoutHistory);
+          const td = new Date().toDateString();
+          if (data.workoutHistory[td]) setTodayWorkout(data.workoutHistory[td]);
+        }
+        const td = new Date().toDateString();
+        if (data.mealHistory) {
+          setMealHistory(data.mealHistory);
+          if (data.mealHistory[td]) setMeals(data.mealHistory[td]);
+        }
+        setShowSetup(false);
+        localStorage.setItem('shredos', ev.target.result);
+      } catch (err) {
+        console.error('Import error:', err);
+      }
+    };
+    reader.readAsText(file);
+    if (e.target) e.target.value = '';
+  };
+
+  // Weekly report computed
+  const weeklyReport = (() => {
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - mondayOffset);
+    monday.setHours(0, 0, 0, 0);
+
+    let totalKcal = 0, totalP = 0, daysWithMeals = 0;
+    let totalVolume = 0, workoutDays = 0;
+    let totalCompliance = 0, daysTracked = 0;
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      if (d > now) break;
+      const key = d.toDateString();
+
+      // Meals
+      const dayMeals = mealHistory[key];
+      if (dayMeals && dayMeals.length > 0) {
+        totalKcal += dayMeals.reduce((s, m) => s + (m.kcal || 0), 0);
+        totalP += dayMeals.reduce((s, m) => s + (m.p || 0), 0);
+        daysWithMeals++;
+      }
+
+      // Workouts
+      const dayWorkout = workoutHistory[key];
+      if (dayWorkout) {
+        totalVolume += dayWorkout.totalVolume || 0;
+        workoutDays++;
+      }
+
+      daysTracked++;
+    }
+
+    // Weight delta this week
+    const weekWeights = weights.filter(w => new Date(w.date) >= monday);
+    const weightStart = weekWeights.length > 0 ? weekWeights[0].value : null;
+    const weightEnd = weekWeights.length > 0 ? weekWeights[weekWeights.length - 1].value : null;
+    const weekWeightDelta = weightStart && weightEnd ? (weightEnd - weightStart).toFixed(1) : null;
+
+    return {
+      avgKcal: daysWithMeals > 0 ? Math.round(totalKcal / daysWithMeals) : 0,
+      avgP: daysWithMeals > 0 ? Math.round(totalP / daysWithMeals) : 0,
+      totalVolume: Math.round(totalVolume),
+      workoutDays,
+      weekWeightDelta,
+      daysTracked,
+      streak,
+    };
+  })();
+
   return {
     // State
     isReady,
@@ -1164,7 +1259,9 @@ ${detectedMeal.name}
     startCamera, stopCamera, capturePhoto, handleFileSelect, handleReset,
     // Cloud sync
     syncCode, syncStatus, handleEnableSync, handleRestoreFromCloud,
-    // Export
-    handleExportJSON,
+    // Export / Import
+    handleExportJSON, handleImportJSON, importFileRef,
+    // Weekly report
+    weeklyReport,
   };
 }

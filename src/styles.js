@@ -1215,6 +1215,36 @@ const styles = `
     white-space: nowrap;
   }
 
+  .weekly-report-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .weekly-report-stat {
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 12px 8px;
+  }
+
+  .weekly-report-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 800;
+    color: #22d3ee;
+    line-height: 1.2;
+  }
+
+  .weekly-report-label {
+    display: block;
+    font-size: 9px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    text-transform: uppercase;
+  }
+
   .export-btn {
     width: 100%;
     background: rgba(34,211,238,0.1);

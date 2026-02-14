@@ -16,7 +16,7 @@ function Overlays({
   isLoading,
   onSprintPhotoBefore,
   userProfile, updateUserProfile,
-  handleExportJSON,
+  handleExportJSON, handleImportJSON, importFileRef,
   syncCode, syncStatus, handleEnableSync, handleRestoreFromCloud
 }) {
   const [restoreCode, setRestoreCode] = React.useState('');
@@ -237,10 +237,20 @@ function Overlays({
               </div>
             </div>
 
-            <div style={{ marginTop: '12px' }}>
-              <button className="export-btn" onClick={handleExportJSON}>
-                Exporter backup JSON
+            <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
+              <button className="export-btn" style={{ flex: 1 }} onClick={handleExportJSON}>
+                Exporter JSON
               </button>
+              <button className="export-btn" style={{ flex: 1 }} onClick={() => importFileRef.current?.click()}>
+                Importer JSON
+              </button>
+              <input
+                ref={importFileRef}
+                type="file"
+                accept=".json"
+                style={{ display: 'none' }}
+                onChange={handleImportJSON}
+              />
             </div>
 
             <div className={`settings-status ${apiKey ? 'connected' : 'disconnected'}`}>

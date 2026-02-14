@@ -16,7 +16,8 @@ export default function DashboardView({
   isSprintCompleted, sprintPhotos, onCaptureAfter, onSaveComparison, onNewSprint,
   copyMealPhotoPrompt, handlePasteMeal,
   todayWorkout, workoutHistory, workoutFileRef,
-  copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout
+  copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout,
+  weeklyReport
 }) {
   const [collapsed, setCollapsed] = useState({});
   const toggleCollapse = (key) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
@@ -417,6 +418,39 @@ export default function DashboardView({
         setShowRenphoScan={setShowRenphoScan}
         apiKey={apiKey}
       />
+
+      {/* Weekly Report */}
+      <div className="card">
+        <div className="card-title">RAPPORT HEBDO</div>
+        <div className="weekly-report-grid">
+          <div className="weekly-report-stat">
+            <span className="weekly-report-value">{weeklyReport.avgKcal}</span>
+            <span className="weekly-report-label">kcal/jour</span>
+          </div>
+          <div className="weekly-report-stat">
+            <span className="weekly-report-value">{weeklyReport.avgP}g</span>
+            <span className="weekly-report-label">prot/jour</span>
+          </div>
+          <div className="weekly-report-stat">
+            <span className="weekly-report-value">{weeklyReport.workoutDays}</span>
+            <span className="weekly-report-label">workouts</span>
+          </div>
+          <div className="weekly-report-stat">
+            <span className="weekly-report-value">{weeklyReport.totalVolume ? weeklyReport.totalVolume.toLocaleString() : 0}</span>
+            <span className="weekly-report-label">kg volume</span>
+          </div>
+          <div className="weekly-report-stat">
+            <span className="weekly-report-value" style={{ color: weeklyReport.weekWeightDelta && parseFloat(weeklyReport.weekWeightDelta) < 0 ? '#22c55e' : weeklyReport.weekWeightDelta && parseFloat(weeklyReport.weekWeightDelta) > 0 ? '#f59e0b' : '#94a3b8' }}>
+              {weeklyReport.weekWeightDelta ? `${weeklyReport.weekWeightDelta > 0 ? '+' : ''}${weeklyReport.weekWeightDelta}` : '--'}
+            </span>
+            <span className="weekly-report-label">kg delta</span>
+          </div>
+          <div className="weekly-report-stat">
+            <span className="weekly-report-value">{weeklyReport.streak}</span>
+            <span className="weekly-report-label">streak</span>
+          </div>
+        </div>
+      </div>
 
       {/* Timeline */}
       <div className="card">

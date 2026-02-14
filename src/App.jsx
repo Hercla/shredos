@@ -47,6 +47,8 @@ export default function App() {
         userProfile={s.userProfile}
         updateUserProfile={s.updateUserProfile}
         handleExportJSON={s.handleExportJSON}
+        handleImportJSON={s.handleImportJSON}
+        importFileRef={s.importFileRef}
         syncCode={s.syncCode}
         syncStatus={s.syncStatus}
         handleEnableSync={s.handleEnableSync}
@@ -132,6 +134,7 @@ export default function App() {
               handlePasteWorkout={s.handlePasteWorkout}
               handleImportWorkoutCSV={s.handleImportWorkoutCSV}
               clearTodayWorkout={s.clearTodayWorkout}
+              weeklyReport={s.weeklyReport}
             />
           )}
 
