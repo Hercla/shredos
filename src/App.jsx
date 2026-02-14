@@ -32,6 +32,7 @@ export default function App() {
         onSprintPhotoBefore={s.handleSprintPhotoBefore}
         userProfile={s.userProfile}
         updateUserProfile={s.updateUserProfile}
+        handleExportJSON={s.handleExportJSON}
       />
 
       <RenphoScanOverlay
@@ -77,6 +78,8 @@ export default function App() {
               carbs={s.carbs}
               fat={s.fat}
               targetCals={s.targetCals}
+              adjustedTargetCals={s.adjustedTargetCals}
+              workoutCalories={s.workoutCalories}
               meals={s.meals}
               mealHistory={s.mealHistory}
               mealForm={s.mealForm}

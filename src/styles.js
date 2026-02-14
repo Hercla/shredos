@@ -1100,6 +1100,71 @@ const styles = `
     border-color: rgba(245,158,11,0.5);
   }
 
+  .card-title-toggle {
+    cursor: pointer;
+    user-select: none;
+    justify-content: space-between;
+  }
+
+  .card-title-toggle:hover {
+    color: #94a3b8;
+  }
+
+  .collapse-arrow {
+    font-size: 14px;
+    color: #475569;
+    transition: transform 0.2s;
+  }
+
+  .workout-week-chart {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 6px;
+    height: 56px;
+    padding: 8px 0;
+    margin-bottom: 12px;
+  }
+
+  .workout-week-bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    gap: 4px;
+  }
+
+  .workout-week-bar {
+    width: 100%;
+    min-height: 3px;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.3s ease;
+  }
+
+  .workout-week-label {
+    font-size: 9px;
+    color: #475569;
+    text-transform: uppercase;
+  }
+
+  .export-btn {
+    width: 100%;
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.25);
+    border-radius: 10px;
+    padding: 12px;
+    color: #22d3ee;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .export-btn:hover {
+    background: rgba(34,211,238,0.2);
+    border-color: rgba(34,211,238,0.4);
+  }
+
   .profile-section {
     margin-bottom: 20px;
     padding-top: 16px;

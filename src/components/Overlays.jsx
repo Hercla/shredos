@@ -15,7 +15,8 @@ function Overlays({
   showSettings, setShowSettings, apiProvider, setApiProvider, apiKey, setApiKey,
   isLoading,
   onSprintPhotoBefore,
-  userProfile, updateUserProfile
+  userProfile, updateUserProfile,
+  handleExportJSON
 }) {
   return (
     <>
@@ -163,6 +164,12 @@ function Overlays({
                 </div>
                 <span>TDEE auto (Mifflin-St Jeor)</span>
               </div>
+            </div>
+
+            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <button className="export-btn" onClick={handleExportJSON}>
+                Exporter backup JSON
+              </button>
             </div>
 
             <div className={`settings-status ${apiKey ? 'connected' : 'disconnected'}`}>

@@ -6,7 +6,7 @@ import SprintCompletion from './SprintCompletion';
 
 export default function DashboardView({
   pct, checkedCount, checklistItems, streak,
-  consumed, protein, carbs, fat, targetCals,
+  consumed, protein, carbs, fat, targetCals, adjustedTargetCals, workoutCalories,
   meals, mealHistory, mealForm, setMealForm, handleAddMeal, handleDeleteMeal,
   weights, weightDelta, weightInput, setWeightInput, handleLogWeight,
   week,
@@ -18,6 +18,9 @@ export default function DashboardView({
   todayWorkout, workoutHistory, workoutFileRef,
   copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout
 }) {
+  const [collapsed, setCollapsed] = useState({});
+  const toggleCollapse = (key) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
+
   const [pasteText, setPasteText] = useState('');
   const [pasteStatus, setPasteStatus] = useState(null); // 'success' | 'error' | null
   const [showPaste, setShowPaste] = useState(false);
@@ -69,7 +72,8 @@ export default function DashboardView({
 
       {/* Macros Card */}
       <div className="card">
-        <div className="card-title">MACROS · LIVE TRACKER</div>
+        <div className="card-title card-title-toggle" onClick={() => toggleCollapse('macros')}>MACROS · LIVE TRACKER <span className="collapse-arrow">{collapsed.macros ? '▸' : '▾'}</span></div>
+        {!collapsed.macros && (<>
         <div className="macros-grid">
           <MacroRing value={consumed.p} target={protein} color="#22d3ee" label="PROTÉINES" pattern="solid" />
           <MacroRing value={consumed.c} target={carbs} color="#f59e0b" label="GLUCIDES" pattern="dashed" />
@@ -80,14 +84,19 @@ export default function DashboardView({
         <div className="kcal-bar">
           <div className="kcal-bar-header">
             <span>🔥 {consumed.kcal} kcal</span>
-            <span style={{ color: '#64748b' }}>/ {targetCals} kcal</span>
+            <span style={{ color: '#64748b' }}>/ {adjustedTargetCals} kcal</span>
           </div>
+          {workoutCalories > 0 && (
+            <div style={{ fontSize: '11px', color: '#22c55e', marginBottom: '4px' }}>
+              +{workoutCalories} kcal workout → {adjustedTargetCals} kcal ajust{'\u00e9'}
+            </div>
+          )}
           <div className="kcal-bar-track">
             <div
               className="kcal-bar-fill"
               style={{
-                width: `${Math.min(100, (consumed.kcal / targetCals) * 100)}%`,
-                background: consumed.kcal > targetCals
+                width: `${Math.min(100, (consumed.kcal / adjustedTargetCals) * 100)}%`,
+                background: consumed.kcal > adjustedTargetCals
                   ? '#ef4444'
                   : 'linear-gradient(90deg, #22d3ee, #818cf8)'
               }}
@@ -231,12 +240,36 @@ export default function DashboardView({
             );
           })()}
         </div>
+        </>)}
       </div>
 
       {/* Workout Card */}
       <div className="card">
-        <div className="card-title">WORKOUT DU JOUR</div>
+        <div className="card-title card-title-toggle" onClick={() => toggleCollapse('workout')}>WORKOUT DU JOUR <span className="collapse-arrow">{collapsed.workout ? '▸' : '▾'}</span></div>
 
+        {(() => {
+          const days = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const key = d.toDateString();
+            const vol = workoutHistory?.[key]?.totalVolume || 0;
+            days.push({ label: d.toLocaleDateString('fr-FR', { weekday: 'narrow' }), vol });
+          }
+          const maxVol = Math.max(...days.map(d => d.vol), 1);
+          return (
+            <div className="workout-week-chart">
+              {days.map((d, i) => (
+                <div key={i} className="workout-week-bar-col">
+                  <div className="workout-week-bar" style={{ height: `${(d.vol / maxVol) * 40}px`, background: d.vol > 0 ? 'linear-gradient(180deg, #22d3ee, #818cf8)' : 'rgba(255,255,255,0.06)' }} />
+                  <span className="workout-week-label">{d.label}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+
+        {!collapsed.workout && (<>
         {todayWorkout ? (
           <div className="workout-content">
             <div className="workout-summary">
@@ -363,6 +396,7 @@ export default function DashboardView({
             </div>
           );
         })()}
+        </>)}
       </div>
 
       {/* Weight Chart */}
@@ -386,7 +420,8 @@ export default function DashboardView({
 
       {/* Timeline */}
       <div className="card">
-        <div className="card-title">🗓️ TIMELINE</div>
+        <div className="card-title card-title-toggle" onClick={() => toggleCollapse('timeline')}>🗓️ TIMELINE <span className="collapse-arrow">{collapsed.timeline ? '▸' : '▾'}</span></div>
+        {!collapsed.timeline && (
         <div className="timeline">
           {Array.from({ length: 12 }, (_, i) => i + 1).map(w => (
             <div
@@ -397,6 +432,7 @@ export default function DashboardView({
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Sprint Completion or Sprint info */}

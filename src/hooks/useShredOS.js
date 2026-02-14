@@ -174,9 +174,11 @@ export default function useShredOS() {
   // Current phase
   const phase = PHASES.find(p => p.weeks.includes(week)) || PHASES[0];
   const targetCals = userProfile.tdee - phase.deficit;
+  const workoutCalories = todayWorkout?.estimatedCalories || 0;
+  const adjustedTargetCals = targetCals + workoutCalories;
   const protein = Math.round(userProfile.weight * 2.2);
-  const fat = Math.round(targetCals * 0.25 / 9);
-  const carbs = Math.round((targetCals - protein * 4 - fat * 9) / 4);
+  const fat = Math.round(adjustedTargetCals * 0.25 / 9);
+  const carbs = Math.round((adjustedTargetCals - protein * 4 - fat * 9) / 4);
 
   // Consumed macros from meals
   const consumed = meals.reduce((acc, m) => ({
@@ -1047,6 +1049,18 @@ ${detectedMeal.name}
     }
   };
 
+  const handleExportJSON = () => {
+    const data = localStorage.getItem('shredos');
+    if (!data) return;
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shredos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return {
     // State
     view, setView, startDate, showSetup, setShowSetup, setupDate, setSetupDate,
@@ -1067,8 +1081,8 @@ ${detectedMeal.name}
     // Refs
     videoRef, streamRef, fileInputRef,
     // Computed
-    today, week, daysLeft, phase, targetCals, protein, fat, carbs,
-    consumed, checkedCount, pct, weightDelta,
+    today, week, daysLeft, phase, targetCals, adjustedTargetCals, workoutCalories,
+    protein, fat, carbs, consumed, checkedCount, pct, weightDelta,
     // Handlers
     handleStartSprint, handleCheck, handleLogWeight, handleAddMeal, handleDeleteMeal,
     handleQuickPrompt, handleSendMessage, onTouchStart, onTouchMove, onTouchEnd,
@@ -1081,5 +1095,7 @@ ${detectedMeal.name}
     copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout,
     // Camera
     startCamera, stopCamera, capturePhoto, handleFileSelect, handleReset,
+    // Export
+    handleExportJSON,
   };
 }
