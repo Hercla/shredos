@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { PHASES, DEFAULT_CHECKLIST, USER, COMPOSITION_RANGES, RENPHO_OCR_PROMPT } from '../constants';
+import parseAIJSON from '../lib/parseAIJSON';
 
 const ACTIVITY_MULTIPLIERS = { sedentary: 1.2, moderate: 1.55, active: 1.725, veryActive: 1.9 };
 
@@ -21,6 +22,7 @@ export default function useShredOS() {
   const [messages, setMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [meals, setMeals] = useState([]);
+  const [mealHistory, setMealHistory] = useState({});
   const [mealForm, setMealForm] = useState({ name: '', kcal: '', p: '', c: '', f: '' });
   const [showCamera, setShowCamera] = useState(false);
   const [confetti, setConfetti] = useState([]);
@@ -84,10 +86,15 @@ export default function useShredOS() {
       if (data.bodyCompositions) setBodyCompositions(data.bodyCompositions);
       if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
       if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
-      // Load meals for today only
+      // Load meal history
       const today = new Date().toDateString();
-      if (data.meals && data.mealsDate === today) {
+      if (data.mealHistory) {
+        setMealHistory(data.mealHistory);
+        if (data.mealHistory[today]) setMeals(data.mealHistory[today]);
+      } else if (data.meals && data.mealsDate === today) {
+        // Migration: old format -> mealHistory
         setMeals(data.meals);
+        setMealHistory({ [today]: data.meals });
       }
     } else {
       setShowSetup(true);
@@ -98,14 +105,14 @@ export default function useShredOS() {
   useEffect(() => {
     if (startDate) {
       const today = new Date().toDateString();
+      const updatedHistory = { ...mealHistory, [today]: meals };
       localStorage.setItem('shredos', JSON.stringify({
         startDate: startDate.toISOString(),
         checks,
         weights,
         streak,
         messages,
-        meals,
-        mealsDate: today,
+        mealHistory: updatedHistory,
         apiKey,
         apiProvider,
         checklistItems,
@@ -114,7 +121,7 @@ export default function useShredOS() {
         userProfile,
       }));
     }
-  }, [startDate, checks, weights, streak, messages, meals, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile]);
+  }, [startDate, checks, weights, streak, messages, meals, mealHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile]);
 
   // Calculate current week
   const today = new Date();
@@ -464,10 +471,15 @@ ${compositionBlock}
         }
         return 'Erreur: ' + JSON.stringify(data);
       } else if (apiProvider === 'claude') {
-        // Claude API requires server-side proxy due to CORS
-        // For now, fallback to copy/paste
+        const response = await fetch('/api/claude', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, apiKey })
+        });
+        const data = await response.json();
         setIsLoading(false);
-        return null;
+        if (data.error) return 'Erreur Claude: ' + data.error;
+        return data.text || null;
       }
     } catch (err) {
       setIsLoading(false);
@@ -757,9 +769,8 @@ Règles:
             const text = data.candidates[0].content.parts[0].text;
             // Try to parse JSON from response
             try {
-              const jsonMatch = text.match(/\{[\s\S]*\}/);
-              if (jsonMatch) {
-                const meal = JSON.parse(jsonMatch[0]);
+              const meal = parseAIJSON(text);
+              if (meal) {
                 const detectedMeal = {
                   id: Date.now(),
                   name: meal.name && meal.name !== 'Repas 1' ? `📷 ${meal.name}` : '📷 Repas photo',
@@ -858,9 +869,8 @@ ${detectedMeal.name}
         if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
           const text = data.candidates[0].content.parts[0].text;
           try {
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              const parsed = JSON.parse(jsonMatch[0]);
+            const parsed = parseAIJSON(text);
+            if (parsed) {
               if (parsed.error) {
                 setRenphoScanError(parsed.error);
               } else {
@@ -922,6 +932,7 @@ ${detectedMeal.name}
     setChecks({});
     setWeights([]);
     setMeals([]);
+    setMealHistory({});
     setBodyCompositions([]);
     setMessages([]);
     setStreak(0);
@@ -939,7 +950,7 @@ ${detectedMeal.name}
     // State
     view, setView, startDate, showSetup, setShowSetup, setupDate, setSetupDate,
     checks, weights, weightInput, setWeightInput, streak,
-    messages, chatInput, setChatInput, meals, mealForm, setMealForm,
+    messages, chatInput, setChatInput, meals, mealHistory, mealForm, setMealForm,
     showCamera, confetti, showSettings, setShowSettings,
     apiKey, setApiKey, apiProvider, setApiProvider, isLoading,
     checklistItems, editingItem, setEditingItem,

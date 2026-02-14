@@ -78,6 +78,7 @@ export default function App() {
               fat={s.fat}
               targetCals={s.targetCals}
               meals={s.meals}
+              mealHistory={s.mealHistory}
               mealForm={s.mealForm}
               setMealForm={s.setMealForm}
               handleAddMeal={s.handleAddMeal}

@@ -7,7 +7,7 @@ import SprintCompletion from './SprintCompletion';
 export default function DashboardView({
   pct, checkedCount, checklistItems, streak,
   consumed, protein, carbs, fat, targetCals,
-  meals, mealForm, setMealForm, handleAddMeal, handleDeleteMeal,
+  meals, mealHistory, mealForm, setMealForm, handleAddMeal, handleDeleteMeal,
   weights, weightDelta, weightInput, setWeightInput, handleLogWeight,
   week,
   startDate, handleReset,
@@ -129,6 +129,33 @@ export default function DashboardView({
             />
             <button className="add-meal-btn" onClick={handleAddMeal}>+</button>
           </div>
+
+          {/* Meal history summary */}
+          {mealHistory && Object.keys(mealHistory).length > 1 && (() => {
+            const today = new Date().toDateString();
+            const pastDays = Object.entries(mealHistory)
+              .filter(([date]) => date !== today)
+              .sort(([a], [b]) => new Date(b) - new Date(a))
+              .slice(0, 3);
+            if (pastDays.length === 0) return null;
+            return (
+              <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ fontSize: '10px', color: '#475569', letterSpacing: '1px', marginBottom: '8px' }}>HISTORIQUE</div>
+                {pastDays.map(([date, dayMeals]) => {
+                  const total = dayMeals.reduce((s, m) => s + (m.kcal || 0), 0);
+                  const totalP = dayMeals.reduce((s, m) => s + (m.p || 0), 0);
+                  const d = new Date(date);
+                  const label = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                  return (
+                    <div key={date} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', padding: '4px 0' }}>
+                      <span>{label}</span>
+                      <span>{total}kcal · P{totalP}g · {dayMeals.length} repas</span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </div>
 

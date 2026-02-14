@@ -1,3 +1,5 @@
+import parseAIJSON from './parseAIJSON';
+
 const GEMINI_MODEL = 'gemini-2.0-flash';
 
 const TRANSFORMATION_PROMPT = `Tu es un coach fitness expert en transformation physique.
@@ -50,9 +52,9 @@ export async function analyzeTransformation(beforeBase64, afterBase64, apiKey) {
 
     if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
       const text = data.candidates[0].content.parts[0].text;
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
+      const parsed = parseAIJSON(text);
+      if (parsed) {
+        return parsed;
       }
     }
 
