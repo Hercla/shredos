@@ -919,6 +919,64 @@ const styles = `
     color: #fbbf24;
   }
 
+  .profile-section {
+    margin-bottom: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .profile-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #94a3b8;
+    user-select: none;
+  }
+
+  .profile-toggle-switch {
+    width: 40px;
+    height: 22px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 11px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .profile-toggle-switch.on {
+    background: linear-gradient(135deg, #22d3ee, #818cf8);
+  }
+
+  .profile-toggle-knob {
+    width: 18px;
+    height: 18px;
+    background: #e2e8f0;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+  }
+
+  .profile-toggle-switch.on .profile-toggle-knob {
+    transform: translateX(18px);
+  }
+
   .loading-spinner {
     display: inline-block;
     width: 16px;

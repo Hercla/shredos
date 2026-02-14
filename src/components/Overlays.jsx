@@ -1,13 +1,21 @@
 import React from 'react';
 import PhotoCapture from './PhotoCapture';
 
+const ACTIVITY_LABELS = {
+  sedentary: 'Sédentaire (bureau)',
+  moderate: 'Modéré (exercice 3-5x/sem)',
+  active: 'Actif (exercice 6-7x/sem)',
+  veryActive: 'Très actif (2x/jour)'
+};
+
 function Overlays({
   showSetup, setupDate, setSetupDate, handleStartSprint,
   confetti,
   showCopySuccess,
   showSettings, setShowSettings, apiProvider, setApiProvider, apiKey, setApiKey,
   isLoading,
-  onSprintPhotoBefore
+  onSprintPhotoBefore,
+  userProfile, updateUserProfile
 }) {
   return (
     <>
@@ -90,6 +98,70 @@ function Overlays({
                 ) : (
                   <>~0.02€/question. Crée ta clé sur <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a></>
                 )}
+              </div>
+            </div>
+
+            <div className="profile-section">
+              <label className="settings-label" style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px' }}>Profil</label>
+              <div className="profile-grid">
+                <div className="profile-field">
+                  <label className="settings-label">Poids (kg)</label>
+                  <input
+                    className="settings-input"
+                    type="number"
+                    value={userProfile.weight}
+                    onChange={(e) => updateUserProfile('weight', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="settings-label">Taille (cm)</label>
+                  <input
+                    className="settings-input"
+                    type="number"
+                    value={userProfile.height}
+                    onChange={(e) => updateUserProfile('height', parseFloat(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="settings-label">Age (ans)</label>
+                  <input
+                    className="settings-input"
+                    type="number"
+                    value={userProfile.age}
+                    onChange={(e) => updateUserProfile('age', parseInt(e.target.value) || 0)}
+                  />
+                </div>
+                <div className="profile-field">
+                  <label className="settings-label">TDEE (kcal)</label>
+                  <input
+                    className="settings-input"
+                    type="number"
+                    value={userProfile.tdee}
+                    disabled={userProfile.autoTDEE}
+                    onChange={(e) => updateUserProfile('tdee', parseInt(e.target.value) || 0)}
+                    style={userProfile.autoTDEE ? { opacity: 0.5 } : {}}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '12px' }}>
+                <label className="settings-label">Niveau d'activité</label>
+                <select
+                  className="settings-select"
+                  value={userProfile.activity}
+                  onChange={(e) => updateUserProfile('activity', e.target.value)}
+                >
+                  {Object.entries(ACTIVITY_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>{label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="profile-toggle" onClick={() => updateUserProfile('autoTDEE', !userProfile.autoTDEE)}>
+                <div className={`profile-toggle-switch ${userProfile.autoTDEE ? 'on' : ''}`}>
+                  <div className="profile-toggle-knob" />
+                </div>
+                <span>TDEE auto (Mifflin-St Jeor)</span>
               </div>
             </div>
 

@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { PHASES, DEFAULT_CHECKLIST, USER, COMPOSITION_RANGES, RENPHO_OCR_PROMPT } from '../constants';
 
+const ACTIVITY_MULTIPLIERS = { sedentary: 1.2, moderate: 1.55, active: 1.725, veryActive: 1.9 };
+
+const calcTDEE = (weight, height, age, activity) => {
+  const bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  return Math.round(bmr * (ACTIVITY_MULTIPLIERS[activity] || 1.55));
+};
+
 export default function useShredOS() {
   // State
   const [view, setView] = useState('dash');
@@ -36,6 +43,12 @@ export default function useShredOS() {
   const [renphoScanError, setRenphoScanError] = useState(null);
   const renphoFileRef = useRef(null);
 
+  // User profile
+  const [userProfile, setUserProfile] = useState({
+    weight: USER.weight, height: USER.height, age: USER.age, tdee: USER.tdee,
+    activity: 'moderate', autoTDEE: false
+  });
+
   // Sprint photos (avant/apres)
   const [sprintPhotos, setSprintPhotos] = useState({ before: null, after: null, aiComparison: null });
 
@@ -70,6 +83,7 @@ export default function useShredOS() {
       if (data.checklistItems) setChecklistItems(data.checklistItems);
       if (data.bodyCompositions) setBodyCompositions(data.bodyCompositions);
       if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
+      if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
       // Load meals for today only
       const today = new Date().toDateString();
       if (data.meals && data.mealsDate === today) {
@@ -97,9 +111,10 @@ export default function useShredOS() {
         checklistItems,
         bodyCompositions,
         sprintPhotos,
+        userProfile,
       }));
     }
-  }, [startDate, checks, weights, streak, messages, meals, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos]);
+  }, [startDate, checks, weights, streak, messages, meals, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile]);
 
   // Calculate current week
   const today = new Date();
@@ -113,8 +128,8 @@ export default function useShredOS() {
 
   // Current phase
   const phase = PHASES.find(p => p.weeks.includes(week)) || PHASES[0];
-  const targetCals = USER.tdee - phase.deficit;
-  const protein = Math.round(USER.weight * 2.2);
+  const targetCals = userProfile.tdee - phase.deficit;
+  const protein = Math.round(userProfile.weight * 2.2);
   const fat = Math.round(targetCals * 0.25 / 9);
   const carbs = Math.round((targetCals - protein * 4 - fat * 9) / 4);
 
@@ -305,7 +320,7 @@ export default function useShredOS() {
 🔥 STREAK: ${streak} actions
 
 🎯 TARGETS:
-- Calories: ${targetCals}kcal (TDEE ${USER.tdee} - deficit ${phase.deficit})
+- Calories: ${targetCals}kcal (TDEE ${userProfile.tdee} - deficit ${phase.deficit})
 - Protéines: ${protein}g | Glucides: ${carbs}g | Lipides: ${fat}g
 
 📈 CONSOMMÉ AUJOURD'HUI:
@@ -321,7 +336,7 @@ ${mealsStatus}
 ⚖️ POIDS: ${lastWeight}kg ${weightTrend}
 ${compositionBlock}
 
-👤 PROFIL: ${USER.age} ans, ${USER.height}cm, objectif shred 12 semaines (méthode Paul Revelia)`;
+👤 PROFIL: ${userProfile.age} ans, ${userProfile.height}cm, ${userProfile.weight}kg, objectif shred 12 semaines (méthode Paul Revelia)`;
   };
 
   // Swipe handlers
@@ -874,6 +889,17 @@ ${detectedMeal.name}
     }
   };
 
+  // User profile handler
+  const updateUserProfile = (field, value) => {
+    setUserProfile(prev => {
+      const next = { ...prev, [field]: value };
+      if (next.autoTDEE && ['weight', 'height', 'age', 'activity', 'autoTDEE'].includes(field)) {
+        next.tdee = calcTDEE(next.weight, next.height, next.age, next.activity);
+      }
+      return next;
+    });
+  };
+
   // Sprint photos handlers
   const handleSprintPhotoBefore = (base64) => {
     setSprintPhotos(prev => ({ ...prev, before: base64 }));
@@ -921,6 +947,8 @@ ${detectedMeal.name}
     bodyCompositions, showCompForm, setShowCompForm, handleLogComposition,
     showRenphoScan, setShowRenphoScan, renphoScanResult, setRenphoScanResult,
     renphoScanError, setRenphoScanError, processRenphoPhoto, handleRenphoFileSelect, renphoFileRef,
+    // User profile
+    userProfile, updateUserProfile,
     // Sprint photos
     sprintPhotos, handleSprintPhotoBefore, handleSprintPhotoAfter, handleSaveAiComparison,
     isSprintCompleted, handleNewSprint,

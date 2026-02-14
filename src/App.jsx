@@ -7,7 +7,6 @@ import PlanView from './components/PlanView';
 import CoachView from './components/CoachView';
 import Overlays from './components/Overlays';
 import RenphoScanOverlay from './components/RenphoScanOverlay';
-import { USER } from './constants';
 
 export default function App() {
   const s = useShredOS();
@@ -31,6 +30,8 @@ export default function App() {
         setApiKey={s.setApiKey}
         isLoading={s.isLoading}
         onSprintPhotoBefore={s.handleSprintPhotoBefore}
+        userProfile={s.userProfile}
+        updateUserProfile={s.updateUserProfile}
       />
 
       <RenphoScanOverlay
@@ -146,7 +147,7 @@ export default function App() {
         </main>
 
         <footer className="footer">
-          ShredOS v7 · {USER.tdee}kcal TDEE · 12W Sprint
+          ShredOS v7 · {s.userProfile.tdee}kcal TDEE · 12W Sprint
         </footer>
       </div>
     </>
