@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MacroRing from './MacroRing';
 import WeightChart from './WeightChart';
 import BodyCompositionCard from './BodyCompositionCard';
@@ -13,8 +13,26 @@ export default function DashboardView({
   startDate, handleReset,
   bodyCompositions, showCompForm, setShowCompForm, handleLogComposition,
   setShowRenphoScan, apiKey,
-  isSprintCompleted, sprintPhotos, onCaptureAfter, onSaveComparison, onNewSprint
+  isSprintCompleted, sprintPhotos, onCaptureAfter, onSaveComparison, onNewSprint,
+  copyMealPhotoPrompt, handlePasteMeal
 }) {
+  const [pasteText, setPasteText] = useState('');
+  const [pasteStatus, setPasteStatus] = useState(null); // 'success' | 'error' | null
+  const [showPaste, setShowPaste] = useState(false);
+
+  const onPasteSubmit = () => {
+    if (!pasteText.trim()) return;
+    const result = handlePasteMeal(pasteText);
+    if (result) {
+      setPasteStatus('success');
+      setPasteText('');
+      setTimeout(() => { setPasteStatus(null); setShowPaste(false); }, 2000);
+    } else {
+      setPasteStatus('error');
+      setTimeout(() => setPasteStatus(null), 3000);
+    }
+  };
+
   return (
     <>
       {/* Score Card */}
@@ -129,6 +147,44 @@ export default function DashboardView({
             />
             <button className="add-meal-btn" onClick={handleAddMeal}>+</button>
           </div>
+
+          {/* Photo -> Claude.ai + Paste response */}
+          <div className="meal-claude-row">
+            <button className="meal-claude-btn" onClick={copyMealPhotoPrompt}>
+              📷 Photo → Claude.ai
+            </button>
+            <button
+              className="meal-paste-toggle"
+              onClick={() => setShowPaste(!showPaste)}
+            >
+              📋 Coller réponse
+            </button>
+          </div>
+
+          {showPaste && (
+            <div className="meal-paste-area">
+              <textarea
+                className="meal-paste-input"
+                placeholder={'Colle ici la réponse de Claude...\nEx: {"name":"Poulet riz","kcal":450,"p":40,"c":50,"f":8}'}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                rows={3}
+              />
+              <button className="meal-paste-btn" onClick={onPasteSubmit}>
+                Ajouter le repas
+              </button>
+              {pasteStatus === 'success' && (
+                <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '6px' }}>
+                  Repas ajouté !
+                </div>
+              )}
+              {pasteStatus === 'error' && (
+                <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '6px' }}>
+                  Format non reconnu. Colle le JSON de Claude.
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Meal history summary */}
           {mealHistory && Object.keys(mealHistory).length > 1 && (() => {

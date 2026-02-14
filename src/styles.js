@@ -919,6 +919,80 @@ const styles = `
     color: #fbbf24;
   }
 
+  .meal-claude-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .meal-claude-btn {
+    flex: 1;
+    background: rgba(139,92,246,0.15);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 10px;
+    padding: 10px 8px;
+    color: #a78bfa;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .meal-claude-btn:hover {
+    background: rgba(139,92,246,0.25);
+    border-color: rgba(139,92,246,0.5);
+  }
+
+  .meal-paste-toggle {
+    flex: 1;
+    background: rgba(34,211,238,0.1);
+    border: 1px solid rgba(34,211,238,0.25);
+    border-radius: 10px;
+    padding: 10px 8px;
+    color: #22d3ee;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .meal-paste-toggle:hover {
+    background: rgba(34,211,238,0.2);
+    border-color: rgba(34,211,238,0.4);
+  }
+
+  .meal-paste-area {
+    margin-top: 10px;
+    animation: slideUp 0.2s ease-out;
+  }
+
+  .meal-paste-input {
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(34,211,238,0.3);
+    border-radius: 10px;
+    padding: 10px;
+    color: #e2e8f0;
+    font-size: 12px;
+    font-family: monospace;
+    resize: vertical;
+  }
+
+  .meal-paste-input::placeholder { color: #475569; }
+
+  .meal-paste-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: linear-gradient(135deg, #22d3ee, #818cf8);
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    color: #0a0a0f;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
   .profile-section {
     margin-bottom: 20px;
     padding-top: 16px;

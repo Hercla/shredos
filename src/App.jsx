@@ -102,6 +102,8 @@ export default function App() {
               onCaptureAfter={s.handleSprintPhotoAfter}
               onSaveComparison={s.handleSaveAiComparison}
               onNewSprint={s.handleNewSprint}
+              copyMealPhotoPrompt={s.copyMealPhotoPrompt}
+              handlePasteMeal={s.handlePasteMeal}
             />
           )}
 

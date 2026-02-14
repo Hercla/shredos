@@ -2,6 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { PHASES, DEFAULT_CHECKLIST, USER, COMPOSITION_RANGES, RENPHO_OCR_PROMPT } from '../constants';
 import parseAIJSON from '../lib/parseAIJSON';
 
+const MEAL_PHOTO_PROMPT = `Analyse cette photo de repas et réponds UNIQUEMENT avec ce format JSON (rien d'autre, pas de markdown):
+{"name": "nom descriptif du repas", "kcal": nombre, "p": grammes_proteines, "c": grammes_glucides, "f": grammes_lipides}
+
+Règles:
+- "name" doit décrire ce que tu vois (ex: "Poulet grillé + riz basmati + brocolis")
+- Estime les macros basé sur les portions visibles. Sois réaliste.
+- Les valeurs doivent être des nombres entiers.`;
+
 const ACTIVITY_MULTIPLIERS = { sedentary: 1.2, moderate: 1.55, active: 1.725, veryActive: 1.9 };
 
 const calcTDEE = (weight, height, age, activity) => {
@@ -899,6 +907,29 @@ ${detectedMeal.name}
     }
   };
 
+  // Copy meal photo prompt for Claude.ai
+  const copyMealPhotoPrompt = () => {
+    copyToClipboard(MEAL_PHOTO_PROMPT, `📷 Copié! Claude.ai s'ouvre...\n\n→ Colle (Ctrl+V)\n→ Upload ta photo (📎)\n→ Copie la réponse JSON!`, true);
+  };
+
+  // Parse pasted AI meal response
+  const handlePasteMeal = (text) => {
+    const meal = parseAIJSON(text);
+    if (meal && meal.name) {
+      const newMeal = {
+        id: Date.now(),
+        name: `📋 ${meal.name}`,
+        kcal: parseInt(meal.kcal) || 0,
+        p: parseInt(meal.p) || 0,
+        c: parseInt(meal.c) || 0,
+        f: parseInt(meal.f) || 0
+      };
+      setMeals(prev => [...prev, newMeal]);
+      return newMeal;
+    }
+    return null;
+  };
+
   // User profile handler
   const updateUserProfile = (field, value) => {
     setUserProfile(prev => {
@@ -974,6 +1005,7 @@ ${detectedMeal.name}
     clearMessages, updateChecklistItem, deleteChecklistItem, addChecklistItem,
     // AI
     generateClaudeContext, copyForClaude, copyOneBetterPrompt, copyPhotoAnalysisPrompt,
+    copyMealPhotoPrompt, handlePasteMeal,
     // Camera
     startCamera, stopCamera, capturePhoto, handleFileSelect, handleReset,
   };
