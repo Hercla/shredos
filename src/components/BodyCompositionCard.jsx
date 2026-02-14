@@ -100,11 +100,9 @@ export default function BodyCompositionCard({
       <CompositionChart bodyCompositions={bodyCompositions} />
 
       <div style={{ display: 'flex', gap: '8px', marginTop: bodyCompositions.length >= 2 ? '12px' : '0' }}>
-        {apiKey && (
-          <button className="scan-renpho-btn" style={{ flex: 1 }} onClick={() => setShowRenphoScan(true)}>
-            📱 Scanner Renpho
-          </button>
-        )}
+        <button className="scan-renpho-btn" style={{ flex: 1 }} onClick={() => setShowRenphoScan(true)}>
+          📱 Scanner Renpho
+        </button>
         <button className="comp-form-toggle" style={{ flex: 1 }} onClick={() => setShowCompForm(true)}>
           ✏️ Saisie manuelle
         </button>

@@ -91,7 +91,10 @@ export default function CoachView({
         <div className="claude-buttons-row">
           <button
             className="copy-claude-btn"
-            onClick={() => copyForClaude(chatInput || messages[messages.length - 1]?.content)}
+            onClick={() => {
+              const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+              copyForClaude(chatInput || lastUserMsg?.content);
+            }}
           >
             📋 Question → Claude
           </button>
