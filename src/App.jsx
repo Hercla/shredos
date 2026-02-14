@@ -11,6 +11,20 @@ import RenphoScanOverlay from './components/RenphoScanOverlay';
 export default function App() {
   const s = useShredOS();
 
+  if (!s.isReady) {
+    return (
+      <>
+        <style>{styles}</style>
+        <div className="app" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+          <div style={{ textAlign: 'center', color: '#64748b' }}>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>S</div>
+            <span className="loading-spinner" />
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <style>{styles}</style>

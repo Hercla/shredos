@@ -38,6 +38,7 @@ export default function useShredOS() {
   const [view, setView] = useState('dash');
   const [startDate, setStartDate] = useState(null);
   const [showSetup, setShowSetup] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [setupDate, setSetupDate] = useState('');
   const [checks, setChecks] = useState({});
   const [weights, setWeights] = useState([]);
@@ -133,6 +134,7 @@ export default function useShredOS() {
     } else {
       setShowSetup(true);
     }
+    setIsReady(true);
   }, []);
 
   // Save to localStorage
@@ -1063,6 +1065,7 @@ ${detectedMeal.name}
 
   return {
     // State
+    isReady,
     view, setView, startDate, showSetup, setShowSetup, setupDate, setSetupDate,
     checks, weights, weightInput, setWeightInput, streak,
     messages, chatInput, setChatInput, meals, mealHistory, mealForm, setMealForm,
