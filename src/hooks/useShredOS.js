@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { PHASES, DEFAULT_CHECKLIST, USER, COMPOSITION_RANGES, RENPHO_OCR_PROMPT } from '../constants';
 import parseAIJSON from '../lib/parseAIJSON';
+import parseWorkoutCSV from '../lib/parseWorkoutCSV';
 
 const MEAL_PHOTO_PROMPT = `Analyse cette photo de repas et réponds UNIQUEMENT avec ce format JSON (rien d'autre, pas de markdown):
 {"name": "nom descriptif du repas", "kcal": nombre, "p": grammes_proteines, "c": grammes_glucides, "f": grammes_lipides}
@@ -9,6 +10,21 @@ Règles:
 - "name" doit décrire ce que tu vois (ex: "Poulet grillé + riz basmati + brocolis")
 - Estime les macros basé sur les portions visibles. Sois réaliste.
 - Les valeurs doivent être des nombres entiers.`;
+
+const WORKOUT_PROMPT = `Analyse ces données de workout et réponds UNIQUEMENT avec ce format JSON (rien d'autre, pas de markdown):
+{
+  "exercises": [{"name": "Nom exercice", "sets": [{"reps": 10, "weight": 80}]}],
+  "totalVolume": nombre_total_kg_souleves,
+  "estimatedCalories": calories_estimees,
+  "duration": duree_minutes_ou_null
+}
+
+Règles:
+- Liste chaque exercice avec ses séries (reps + poids en kg)
+- totalVolume = somme de (reps x poids) pour toutes les séries
+- estimatedCalories = estimation réaliste des calories brûlées (musculation ~5-8 kcal/min)
+- Si la durée n'est pas mentionnée, estime-la
+- Sois précis sur les noms d'exercices`;
 
 const ACTIVITY_MULTIPLIERS = { sedentary: 1.2, moderate: 1.55, active: 1.725, veryActive: 1.9 };
 
@@ -53,6 +69,11 @@ export default function useShredOS() {
   const [renphoScanError, setRenphoScanError] = useState(null);
   const renphoFileRef = useRef(null);
 
+  // Workouts
+  const [todayWorkout, setTodayWorkout] = useState(null);
+  const [workoutHistory, setWorkoutHistory] = useState({});
+  const workoutFileRef = useRef(null);
+
   // User profile
   const [userProfile, setUserProfile] = useState({
     weight: USER.weight, height: USER.height, age: USER.age, tdee: USER.tdee,
@@ -94,6 +115,11 @@ export default function useShredOS() {
       if (data.bodyCompositions) setBodyCompositions(data.bodyCompositions);
       if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
       if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
+      if (data.workoutHistory) {
+        setWorkoutHistory(data.workoutHistory);
+        const today = new Date().toDateString();
+        if (data.workoutHistory[today]) setTodayWorkout(data.workoutHistory[today]);
+      }
       // Load meal history
       const today = new Date().toDateString();
       if (data.mealHistory) {
@@ -114,6 +140,9 @@ export default function useShredOS() {
     if (startDate) {
       const today = new Date().toDateString();
       const updatedHistory = { ...mealHistory, [today]: meals };
+      const updatedWorkoutHistory = todayWorkout
+        ? { ...workoutHistory, [today]: todayWorkout }
+        : workoutHistory;
       localStorage.setItem('shredos', JSON.stringify({
         startDate: startDate.toISOString(),
         checks,
@@ -121,6 +150,7 @@ export default function useShredOS() {
         streak,
         messages,
         mealHistory: updatedHistory,
+        workoutHistory: updatedWorkoutHistory,
         apiKey,
         apiProvider,
         checklistItems,
@@ -129,7 +159,7 @@ export default function useShredOS() {
         userProfile,
       }));
     }
-  }, [startDate, checks, weights, streak, messages, meals, mealHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile]);
+  }, [startDate, checks, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile]);
 
   // Calculate current week
   const today = new Date();
@@ -930,6 +960,44 @@ ${detectedMeal.name}
     return null;
   };
 
+  // Workout handlers
+  const copyWorkoutPrompt = () => {
+    copyToClipboard(WORKOUT_PROMPT, `🏋️ Copié! Claude.ai s'ouvre...\n\n→ Colle (Ctrl+V)\n→ Ajoute tes données workout\n→ Copie la réponse JSON!`, true);
+  };
+
+  const handlePasteWorkout = (text) => {
+    const workout = parseAIJSON(text);
+    if (workout && workout.exercises && workout.exercises.length > 0) {
+      const entry = {
+        ...workout,
+        date: new Date().toISOString(),
+        source: workout.source || 'claude'
+      };
+      setTodayWorkout(entry);
+      return entry;
+    }
+    return null;
+  };
+
+  const handleImportWorkoutCSV = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = parseWorkoutCSV(ev.target.result);
+      if (result) {
+        const entry = { ...result, date: new Date().toISOString() };
+        setTodayWorkout(entry);
+      }
+    };
+    reader.readAsText(file);
+    if (e.target) e.target.value = '';
+  };
+
+  const clearTodayWorkout = () => {
+    setTodayWorkout(null);
+  };
+
   // User profile handler
   const updateUserProfile = (field, value) => {
     setUserProfile(prev => {
@@ -964,6 +1032,8 @@ ${detectedMeal.name}
     setWeights([]);
     setMeals([]);
     setMealHistory({});
+    setTodayWorkout(null);
+    setWorkoutHistory({});
     setBodyCompositions([]);
     setMessages([]);
     setStreak(0);
@@ -1006,6 +1076,9 @@ ${detectedMeal.name}
     // AI
     generateClaudeContext, copyForClaude, copyOneBetterPrompt, copyPhotoAnalysisPrompt,
     copyMealPhotoPrompt, handlePasteMeal,
+    // Workout
+    todayWorkout, workoutHistory, workoutFileRef,
+    copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout,
     // Camera
     startCamera, stopCamera, capturePhoto, handleFileSelect, handleReset,
   };

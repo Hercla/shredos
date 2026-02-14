@@ -104,6 +104,13 @@ export default function App() {
               onNewSprint={s.handleNewSprint}
               copyMealPhotoPrompt={s.copyMealPhotoPrompt}
               handlePasteMeal={s.handlePasteMeal}
+              todayWorkout={s.todayWorkout}
+              workoutHistory={s.workoutHistory}
+              workoutFileRef={s.workoutFileRef}
+              copyWorkoutPrompt={s.copyWorkoutPrompt}
+              handlePasteWorkout={s.handlePasteWorkout}
+              handleImportWorkoutCSV={s.handleImportWorkoutCSV}
+              clearTodayWorkout={s.clearTodayWorkout}
             />
           )}
 

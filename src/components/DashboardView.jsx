@@ -14,11 +14,16 @@ export default function DashboardView({
   bodyCompositions, showCompForm, setShowCompForm, handleLogComposition,
   setShowRenphoScan, apiKey,
   isSprintCompleted, sprintPhotos, onCaptureAfter, onSaveComparison, onNewSprint,
-  copyMealPhotoPrompt, handlePasteMeal
+  copyMealPhotoPrompt, handlePasteMeal,
+  todayWorkout, workoutHistory, workoutFileRef,
+  copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout
 }) {
   const [pasteText, setPasteText] = useState('');
   const [pasteStatus, setPasteStatus] = useState(null); // 'success' | 'error' | null
   const [showPaste, setShowPaste] = useState(false);
+  const [workoutPasteText, setWorkoutPasteText] = useState('');
+  const [workoutPasteStatus, setWorkoutPasteStatus] = useState(null);
+  const [showWorkoutPaste, setShowWorkoutPaste] = useState(false);
 
   const onPasteSubmit = () => {
     if (!pasteText.trim()) return;
@@ -30,6 +35,19 @@ export default function DashboardView({
     } else {
       setPasteStatus('error');
       setTimeout(() => setPasteStatus(null), 3000);
+    }
+  };
+
+  const onWorkoutPasteSubmit = () => {
+    if (!workoutPasteText.trim()) return;
+    const result = handlePasteWorkout(workoutPasteText);
+    if (result) {
+      setWorkoutPasteStatus('success');
+      setWorkoutPasteText('');
+      setTimeout(() => { setWorkoutPasteStatus(null); setShowWorkoutPaste(false); }, 2000);
+    } else {
+      setWorkoutPasteStatus('error');
+      setTimeout(() => setWorkoutPasteStatus(null), 3000);
     }
   };
 
@@ -213,6 +231,138 @@ export default function DashboardView({
             );
           })()}
         </div>
+      </div>
+
+      {/* Workout Card */}
+      <div className="card">
+        <div className="card-title">WORKOUT DU JOUR</div>
+
+        {todayWorkout ? (
+          <div className="workout-content">
+            <div className="workout-summary">
+              <div className="workout-stat">
+                <span className="workout-stat-value">{todayWorkout.exercises?.length || 0}</span>
+                <span className="workout-stat-label">exercices</span>
+              </div>
+              <div className="workout-stat">
+                <span className="workout-stat-value">{todayWorkout.totalVolume ? Math.round(todayWorkout.totalVolume).toLocaleString() : 0}</span>
+                <span className="workout-stat-label">kg volume</span>
+              </div>
+              <div className="workout-stat">
+                <span className="workout-stat-value">{todayWorkout.estimatedCalories || 0}</span>
+                <span className="workout-stat-label">kcal</span>
+              </div>
+              {todayWorkout.duration && (
+                <div className="workout-stat">
+                  <span className="workout-stat-value">{todayWorkout.duration}</span>
+                  <span className="workout-stat-label">min</span>
+                </div>
+              )}
+            </div>
+
+            <div className="workout-exercises">
+              {todayWorkout.exercises?.map((ex, i) => (
+                <div key={i} className="workout-exercise">
+                  <div className="workout-exercise-name">{ex.name}</div>
+                  <div className="workout-exercise-sets">
+                    {ex.sets?.map((s, j) => (
+                      <span key={j} className="workout-set-badge">
+                        {s.reps}x{s.weight}kg
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button className="workout-clear-btn" onClick={clearTodayWorkout}>
+              Effacer
+            </button>
+          </div>
+        ) : (
+          <div style={{ fontSize: '13px', color: '#475569', padding: '12px 0' }}>
+            Aucun workout logg{'\u00e9'}
+          </div>
+        )}
+
+        {/* Workout input methods */}
+        <div className="workout-actions">
+          <div className="meal-claude-row">
+            <button className="meal-claude-btn" onClick={copyWorkoutPrompt}>
+              Workout → Claude.ai
+            </button>
+            <button
+              className="meal-paste-toggle"
+              onClick={() => setShowWorkoutPaste(!showWorkoutPaste)}
+            >
+              Coller r{'\u00e9'}ponse
+            </button>
+          </div>
+
+          <button
+            className="workout-csv-btn"
+            onClick={() => workoutFileRef.current?.click()}
+          >
+            Importer CSV (Reps & Sets, Strong...)
+          </button>
+          <input
+            ref={workoutFileRef}
+            type="file"
+            accept=".csv,.tsv,.txt"
+            style={{ display: 'none' }}
+            onChange={handleImportWorkoutCSV}
+          />
+        </div>
+
+        {showWorkoutPaste && (
+          <div className="meal-paste-area">
+            <textarea
+              className="meal-paste-input"
+              placeholder={'Colle ici la r\u00e9ponse de Claude...\nEx: {"exercises":[{"name":"Bench Press","sets":[{"reps":10,"weight":80}]}],"totalVolume":800}'}
+              value={workoutPasteText}
+              onChange={(e) => setWorkoutPasteText(e.target.value)}
+              rows={3}
+            />
+            <button className="meal-paste-btn" onClick={onWorkoutPasteSubmit}>
+              Ajouter le workout
+            </button>
+            {workoutPasteStatus === 'success' && (
+              <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '6px' }}>
+                Workout ajout{'\u00e9'} !
+              </div>
+            )}
+            {workoutPasteStatus === 'error' && (
+              <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '6px' }}>
+                Format non reconnu. Colle le JSON de Claude.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Workout history */}
+        {workoutHistory && Object.keys(workoutHistory).length > 0 && (() => {
+          const today = new Date().toDateString();
+          const pastDays = Object.entries(workoutHistory)
+            .filter(([date]) => date !== today)
+            .sort(([a], [b]) => new Date(b) - new Date(a))
+            .slice(0, 3);
+          if (pastDays.length === 0) return null;
+          return (
+            <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div style={{ fontSize: '10px', color: '#475569', letterSpacing: '1px', marginBottom: '8px' }}>HISTORIQUE WORKOUTS</div>
+              {pastDays.map(([date, w]) => {
+                const d = new Date(date);
+                const label = d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                return (
+                  <div key={date} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b', padding: '4px 0' }}>
+                    <span>{label}</span>
+                    <span>{w.exercises?.length || 0} exos · {w.totalVolume ? Math.round(w.totalVolume).toLocaleString() : 0}kg · {w.estimatedCalories || 0}kcal</span>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Weight Chart */}

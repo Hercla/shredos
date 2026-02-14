@@ -993,6 +993,113 @@ const styles = `
     cursor: pointer;
   }
 
+  .workout-content {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .workout-summary {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+
+  .workout-stat {
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border-radius: 10px;
+    padding: 10px 14px;
+    flex: 1;
+  }
+
+  .workout-stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 800;
+    color: #22d3ee;
+    line-height: 1.2;
+  }
+
+  .workout-stat-label {
+    display: block;
+    font-size: 10px;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+  }
+
+  .workout-exercises {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .workout-exercise {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+  }
+
+  .workout-exercise-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+
+  .workout-exercise-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .workout-set-badge {
+    font-size: 11px;
+    color: #94a3b8;
+    background: rgba(34,211,238,0.1);
+    border-radius: 6px;
+    padding: 2px 8px;
+  }
+
+  .workout-clear-btn {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: #ef4444;
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+
+  .workout-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+
+  .workout-csv-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: rgba(245,158,11,0.12);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 10px 8px;
+    color: #f59e0b;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .workout-csv-btn:hover {
+    background: rgba(245,158,11,0.22);
+    border-color: rgba(245,158,11,0.5);
+  }
+
   .profile-section {
     margin-bottom: 20px;
     padding-top: 16px;
