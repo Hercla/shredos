@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { PHASES, DEFAULT_CHECKLIST, USER, COMPOSITION_RANGES, RENPHO_OCR_PROMPT } from '../constants';
 import parseAIJSON from '../lib/parseAIJSON';
 import parseWorkoutCSV from '../lib/parseWorkoutCSV';
+import { generateSyncCode, saveToCloud, loadFromCloud } from '../lib/supabaseSync';
 
 const MEAL_PHOTO_PROMPT = `Analyse cette photo de repas et réponds UNIQUEMENT avec ce format JSON (rien d'autre, pas de markdown):
 {"name": "nom descriptif du repas", "kcal": nombre, "p": grammes_proteines, "c": grammes_glucides, "f": grammes_lipides}
@@ -75,6 +76,11 @@ export default function useShredOS() {
   const [workoutHistory, setWorkoutHistory] = useState({});
   const workoutFileRef = useRef(null);
 
+  // Cloud sync
+  const [syncCode, setSyncCode] = useState('');
+  const [syncStatus, setSyncStatus] = useState(null); // 'syncing' | 'synced' | 'error' | null
+  const syncTimeoutRef = useRef(null);
+
   // User profile
   const [userProfile, setUserProfile] = useState({
     weight: USER.weight, height: USER.height, age: USER.age, tdee: USER.tdee,
@@ -116,6 +122,7 @@ export default function useShredOS() {
       if (data.bodyCompositions) setBodyCompositions(data.bodyCompositions);
       if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
       if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
+      if (data.syncCode) setSyncCode(data.syncCode);
       if (data.workoutHistory) {
         setWorkoutHistory(data.workoutHistory);
         const today = new Date().toDateString();
@@ -145,7 +152,7 @@ export default function useShredOS() {
       const updatedWorkoutHistory = todayWorkout
         ? { ...workoutHistory, [today]: todayWorkout }
         : workoutHistory;
-      localStorage.setItem('shredos', JSON.stringify({
+      const saveData = {
         startDate: startDate.toISOString(),
         checks,
         weights,
@@ -159,9 +166,22 @@ export default function useShredOS() {
         bodyCompositions,
         sprintPhotos,
         userProfile,
-      }));
+        syncCode,
+      };
+      localStorage.setItem('shredos', JSON.stringify(saveData));
+
+      // Auto-sync to cloud (debounced 3s)
+      if (syncCode) {
+        if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+        syncTimeoutRef.current = setTimeout(async () => {
+          setSyncStatus('syncing');
+          const ok = await saveToCloud(syncCode, saveData);
+          setSyncStatus(ok ? 'synced' : 'error');
+          if (ok) setTimeout(() => setSyncStatus(null), 3000);
+        }, 3000);
+      }
     }
-  }, [startDate, checks, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile]);
+  }, [startDate, checks, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile, syncCode]);
 
   // Calculate current week
   const today = new Date();
@@ -1051,6 +1071,50 @@ ${detectedMeal.name}
     }
   };
 
+  // Cloud sync handlers
+  const handleEnableSync = () => {
+    const code = generateSyncCode();
+    setSyncCode(code);
+  };
+
+  const handleRestoreFromCloud = async (code) => {
+    if (!code || code.length !== 6) return false;
+    setSyncStatus('syncing');
+    const result = await loadFromCloud(code.toUpperCase());
+    if (result && result.data) {
+      const data = result.data;
+      if (data.startDate) setStartDate(new Date(data.startDate));
+      if (data.checks) setChecks(data.checks);
+      if (data.weights) setWeights(data.weights);
+      if (data.streak) setStreak(data.streak);
+      if (data.messages) setMessages(data.messages);
+      if (data.apiKey) setApiKey(data.apiKey);
+      if (data.apiProvider) setApiProvider(data.apiProvider);
+      if (data.checklistItems) setChecklistItems(data.checklistItems);
+      if (data.bodyCompositions) setBodyCompositions(data.bodyCompositions);
+      if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
+      if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
+      if (data.workoutHistory) {
+        setWorkoutHistory(data.workoutHistory);
+        const today = new Date().toDateString();
+        if (data.workoutHistory[today]) setTodayWorkout(data.workoutHistory[today]);
+      }
+      const today = new Date().toDateString();
+      if (data.mealHistory) {
+        setMealHistory(data.mealHistory);
+        if (data.mealHistory[today]) setMeals(data.mealHistory[today]);
+      }
+      setSyncCode(code.toUpperCase());
+      setShowSetup(false);
+      setSyncStatus('synced');
+      setTimeout(() => setSyncStatus(null), 3000);
+      return true;
+    }
+    setSyncStatus('error');
+    setTimeout(() => setSyncStatus(null), 3000);
+    return false;
+  };
+
   const handleExportJSON = () => {
     const data = localStorage.getItem('shredos');
     if (!data) return;
@@ -1098,6 +1162,8 @@ ${detectedMeal.name}
     copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout,
     // Camera
     startCamera, stopCamera, capturePhoto, handleFileSelect, handleReset,
+    // Cloud sync
+    syncCode, syncStatus, handleEnableSync, handleRestoreFromCloud,
     // Export
     handleExportJSON,
   };

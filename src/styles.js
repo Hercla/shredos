@@ -1147,6 +1147,74 @@ const styles = `
     text-transform: uppercase;
   }
 
+  .sync-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .sync-code-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(34,211,238,0.08);
+    border: 1px solid rgba(34,211,238,0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+  }
+
+  .sync-code-value {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: 4px;
+    color: #22d3ee;
+    font-family: monospace;
+    flex: 1;
+  }
+
+  .sync-code-copy {
+    background: rgba(34,211,238,0.15);
+    border: 1px solid rgba(34,211,238,0.3);
+    border-radius: 8px;
+    padding: 6px 14px;
+    color: #22d3ee;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .sync-restore-input {
+    flex: 1;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: #e2e8f0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    font-family: monospace;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .sync-restore-input::placeholder {
+    color: #475569;
+    letter-spacing: 2px;
+  }
+
+  .sync-restore-btn {
+    background: linear-gradient(135deg, #22d3ee, #818cf8);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: #0a0a0f;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
   .export-btn {
     width: 100%;
     background: rgba(34,211,238,0.1);

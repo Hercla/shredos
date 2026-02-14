@@ -47,6 +47,10 @@ export default function App() {
         userProfile={s.userProfile}
         updateUserProfile={s.updateUserProfile}
         handleExportJSON={s.handleExportJSON}
+        syncCode={s.syncCode}
+        syncStatus={s.syncStatus}
+        handleEnableSync={s.handleEnableSync}
+        handleRestoreFromCloud={s.handleRestoreFromCloud}
       />
 
       <RenphoScanOverlay

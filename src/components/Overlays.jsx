@@ -16,8 +16,11 @@ function Overlays({
   isLoading,
   onSprintPhotoBefore,
   userProfile, updateUserProfile,
-  handleExportJSON
+  handleExportJSON,
+  syncCode, syncStatus, handleEnableSync, handleRestoreFromCloud
 }) {
+  const [restoreCode, setRestoreCode] = React.useState('');
+  const [restoreStatus, setRestoreStatus] = React.useState(null);
   return (
     <>
       {/* Setup overlay */}
@@ -166,7 +169,75 @@ function Overlays({
               </div>
             </div>
 
-            <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            {/* Cloud Sync */}
+            <div className="sync-section">
+              <div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '1px', marginBottom: '10px' }}>CLOUD SYNC</div>
+
+              {syncCode ? (
+                <div className="sync-active">
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '8px' }}>
+                    Ton code sync :
+                  </div>
+                  <div className="sync-code-display">
+                    <span className="sync-code-value">{syncCode}</span>
+                    <button
+                      className="sync-code-copy"
+                      onClick={() => navigator.clipboard.writeText(syncCode)}
+                    >
+                      Copier
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#475569', marginTop: '6px' }}>
+                    {syncStatus === 'syncing' && 'Sync en cours...'}
+                    {syncStatus === 'synced' && '\u2705 Sync\u00e9 !'}
+                    {syncStatus === 'error' && '\u26a0\ufe0f Erreur sync'}
+                    {!syncStatus && 'Auto-sync activ\u00e9'}
+                  </div>
+                </div>
+              ) : (
+                <button className="export-btn" onClick={handleEnableSync}>
+                  Activer Cloud Sync
+                </button>
+              )}
+
+              <div style={{ marginTop: '12px' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '6px' }}>
+                  Restaurer depuis un code :
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    className="sync-restore-input"
+                    placeholder="CODE"
+                    value={restoreCode}
+                    onChange={(e) => setRestoreCode(e.target.value.toUpperCase().slice(0, 6))}
+                    maxLength={6}
+                  />
+                  <button
+                    className="sync-restore-btn"
+                    onClick={async () => {
+                      const ok = await handleRestoreFromCloud(restoreCode);
+                      setRestoreStatus(ok ? 'success' : 'error');
+                      if (ok) setRestoreCode('');
+                      setTimeout(() => setRestoreStatus(null), 3000);
+                    }}
+                  >
+                    Restaurer
+                  </button>
+                </div>
+                {restoreStatus === 'success' && (
+                  <div style={{ fontSize: '11px', color: '#22c55e', marginTop: '4px' }}>
+                    Donn\u00e9es restaur\u00e9es !
+                  </div>
+                )}
+                {restoreStatus === 'error' && (
+                  <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '4px' }}>
+                    Code introuvable
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '12px' }}>
               <button className="export-btn" onClick={handleExportJSON}>
                 Exporter backup JSON
               </button>
