@@ -2275,6 +2275,73 @@ const styles = `
     background: rgba(255,255,255,0.08);
     color: #e2e8f0;
   }
+
+  /* Date Navigation */
+  .date-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 8px 0;
+  }
+
+  .date-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+  }
+
+  .date-nav-btn:hover:not(:disabled) {
+    background: rgba(255,255,255,0.1);
+    color: #e2e8f0;
+  }
+
+  .date-nav-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
+
+  .date-nav-label {
+    background: none;
+    border: none;
+    color: #e2e8f0;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 16px;
+    border-radius: 20px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: capitalize;
+  }
+
+  .date-nav-label:hover {
+    background: rgba(255,255,255,0.05);
+  }
+
+  .date-nav-today {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, rgba(34,211,238,0.2), rgba(129,140,248,0.2));
+    border: 1px solid rgba(34,211,238,0.3);
+    color: #22d3ee;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
 `;
 
 export default styles;

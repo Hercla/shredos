@@ -96,14 +96,14 @@ export default function App() {
               checkedCount={s.checkedCount}
               checklistItems={s.checklistItems}
               streak={s.streak}
-              consumed={s.consumed}
+              consumed={s.selectedConsumed}
               protein={s.protein}
               carbs={s.carbs}
               fat={s.fat}
               targetCals={s.targetCals}
-              adjustedTargetCals={s.adjustedTargetCals}
-              workoutCalories={s.workoutCalories}
-              meals={s.meals}
+              adjustedTargetCals={s.selectedAdjustedTargetCals}
+              workoutCalories={s.selectedWorkoutCalories}
+              meals={s.selectedMeals}
               mealHistory={s.mealHistory}
               mealForm={s.mealForm}
               setMealForm={s.setMealForm}
@@ -130,7 +130,7 @@ export default function App() {
               onNewSprint={s.handleNewSprint}
               copyMealPhotoPrompt={s.copyMealPhotoPrompt}
               handlePasteMeal={s.handlePasteMeal}
-              todayWorkout={s.todayWorkout}
+              todayWorkout={s.selectedWorkout}
               workoutHistory={s.workoutHistory}
               workoutFileRef={s.workoutFileRef}
               copyWorkoutPrompt={s.copyWorkoutPrompt}
@@ -138,6 +138,11 @@ export default function App() {
               handleImportWorkoutCSV={s.handleImportWorkoutCSV}
               clearTodayWorkout={s.clearTodayWorkout}
               weeklyReport={s.weeklyReport}
+              isToday={s.isToday}
+              selectedDate={s.selectedDate}
+              goToPrevDay={s.goToPrevDay}
+              goToNextDay={s.goToNextDay}
+              goToToday={s.goToToday}
             />
           )}
 

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function WeightChart({ weights, weightDelta, weightInput, setWeightInput, handleLogWeight }) {
+export default function WeightChart({ weights, weightDelta, weightInput, setWeightInput, handleLogWeight, readOnly }) {
   const renderChart = () => {
     if (weights.length === 0) {
       return (
@@ -72,19 +72,21 @@ export default function WeightChart({ weights, weightDelta, weightInput, setWeig
     <div className="card">
       <div className="card-title">📉 COURBE DE POIDS</div>
       {renderChart()}
-      <div className="weight-input-row">
-        <input
-          className="weight-input"
-          type="number"
-          step="0.1"
-          placeholder="Ex: 95.2"
-          value={weightInput}
-          onChange={(e) => setWeightInput(e.target.value)}
-        />
-        <button className="weight-btn" onClick={handleLogWeight}>
-          Log
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="weight-input-row">
+          <input
+            className="weight-input"
+            type="number"
+            step="0.1"
+            placeholder="Ex: 95.2"
+            value={weightInput}
+            onChange={(e) => setWeightInput(e.target.value)}
+          />
+          <button className="weight-btn" onClick={handleLogWeight}>
+            Log
+          </button>
+        </div>
+      )}
     </div>
   );
 }

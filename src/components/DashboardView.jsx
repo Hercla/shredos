@@ -17,7 +17,8 @@ export default function DashboardView({
   copyMealPhotoPrompt, handlePasteMeal,
   todayWorkout, workoutHistory, workoutFileRef,
   copyWorkoutPrompt, handlePasteWorkout, handleImportWorkoutCSV, clearTodayWorkout,
-  weeklyReport
+  weeklyReport,
+  isToday, selectedDate, goToPrevDay, goToNextDay, goToToday
 }) {
   const [collapsed, setCollapsed] = useState({});
   const toggleCollapse = (key) => setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
@@ -57,6 +58,16 @@ export default function DashboardView({
 
   return (
     <>
+      {/* Date Navigation */}
+      <div className="date-nav">
+        <button className="date-nav-btn" onClick={goToPrevDay}>&#8249;</button>
+        <button className="date-nav-label" onClick={goToToday}>
+          {selectedDate.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+          {isToday && <span className="date-nav-today">Aujourd'hui</span>}
+        </button>
+        <button className="date-nav-btn" onClick={goToNextDay} disabled={isToday}>&#8250;</button>
+      </div>
+
       {/* Score Card */}
       <div className={`card ${pct === 100 ? 'card-glow' : ''}`}>
         <div className="card-title">SCORE DU JOUR</div>
@@ -108,7 +119,7 @@ export default function DashboardView({
         {/* Meals section */}
         <div className="meals-section">
           <div style={{ fontSize: '11px', color: '#64748b', marginBottom: '10px' }}>
-            REPAS AUJOURD'HUI
+            REPAS {isToday ? "AUJOURD'HUI" : selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })}
           </div>
 
           {meals.length === 0 ? (
@@ -126,18 +137,19 @@ export default function DashboardView({
                   <span>P{meal.p}</span>
                   <span>C{meal.c}</span>
                   <span>F{meal.f}</span>
-                  <button
+                  {isToday && <button
                     className="meal-delete"
                     onClick={() => handleDeleteMeal(meal.id)}
                   >
                     ✕
-                  </button>
+                  </button>}
                 </div>
               </div>
             ))
           )}
 
           {/* Add meal form */}
+          {isToday && (<>
           <div className="add-meal-form">
             <input
               className="add-meal-input"
@@ -213,6 +225,7 @@ export default function DashboardView({
               )}
             </div>
           )}
+          </>)}
 
           {/* Meal history summary */}
           {mealHistory && Object.keys(mealHistory).length > 1 && (() => {
@@ -309,9 +322,9 @@ export default function DashboardView({
               ))}
             </div>
 
-            <button className="workout-clear-btn" onClick={clearTodayWorkout}>
+            {isToday && <button className="workout-clear-btn" onClick={clearTodayWorkout}>
               Effacer
-            </button>
+            </button>}
           </div>
         ) : (
           <div style={{ fontSize: '13px', color: '#475569', padding: '12px 0' }}>
@@ -320,6 +333,7 @@ export default function DashboardView({
         )}
 
         {/* Workout input methods */}
+        {isToday && (<>
         <div className="workout-actions">
           <div className="meal-claude-row">
             <button className="meal-claude-btn" onClick={copyWorkoutPrompt}>
@@ -372,6 +386,7 @@ export default function DashboardView({
             )}
           </div>
         )}
+        </>)}
 
         {/* Workout history */}
         {workoutHistory && Object.keys(workoutHistory).length > 0 && (() => {
@@ -407,6 +422,7 @@ export default function DashboardView({
         weightInput={weightInput}
         setWeightInput={setWeightInput}
         handleLogWeight={handleLogWeight}
+        readOnly={!isToday}
       />
 
       {/* Body Composition */}

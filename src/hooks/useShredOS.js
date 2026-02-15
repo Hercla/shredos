@@ -41,7 +41,8 @@ export default function useShredOS() {
   const [showSetup, setShowSetup] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [setupDate, setSetupDate] = useState('');
-  const [checks, setChecks] = useState({});
+  const [checksHistory, setChecksHistory] = useState({});
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [weights, setWeights] = useState([]);
   const [weightInput, setWeightInput] = useState('');
   const [streak, setStreak] = useState(0);
@@ -110,6 +111,12 @@ export default function useShredOS() {
   // Views
   const views = ['dash', 'plan', 'ai'];
 
+  // Date navigation
+  const selectedDateKey = selectedDate.toDateString();
+  const todayKey = new Date().toDateString();
+  const isToday = selectedDateKey === todayKey;
+  const checks = checksHistory[selectedDateKey] || {};
+
   // Refs
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -122,7 +129,11 @@ export default function useShredOS() {
       const data = JSON.parse(saved);
       if (data.startDate) setStartDate(new Date(data.startDate));
       else setShowSetup(true);
-      if (data.checks) setChecks(data.checks);
+      if (data.checksHistory) {
+        setChecksHistory(data.checksHistory);
+      } else if (data.checks) {
+        setChecksHistory({ [new Date().toDateString()]: data.checks });
+      }
       if (data.weights) setWeights(data.weights);
       if (data.streak) setStreak(data.streak);
       if (data.messages) setMessages(data.messages);
@@ -165,7 +176,7 @@ export default function useShredOS() {
         : workoutHistory;
       const saveData = {
         startDate: startDate.toISOString(),
-        checks,
+        checksHistory,
         weights,
         streak,
         messages,
@@ -193,7 +204,7 @@ export default function useShredOS() {
         }, 3000);
       }
     }
-  }, [startDate, checks, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile, syncCode, notifSettings]);
+  }, [startDate, checksHistory, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile, syncCode, notifSettings]);
 
   // Calculate current week
   const today = new Date();
@@ -221,6 +232,19 @@ export default function useShredOS() {
     c: acc.c + (m.c || 0),
     f: acc.f + (m.f || 0)
   }), { kcal: 0, p: 0, c: 0, f: 0 });
+
+  // Selected date display data
+  const selectedMeals = isToday ? meals : (mealHistory[selectedDateKey] || []);
+  const selectedConsumed = selectedMeals.reduce((acc, m) => ({
+    kcal: acc.kcal + (m.kcal || 0),
+    p: acc.p + (m.p || 0),
+    c: acc.c + (m.c || 0),
+    f: acc.f + (m.f || 0)
+  }), { kcal: 0, p: 0, c: 0, f: 0 });
+  const selectedWorkout = isToday ? todayWorkout : (workoutHistory[selectedDateKey] || null);
+  const selectedWorkoutCalories = selectedWorkout?.estimatedCalories || 0;
+  const selectedAdjustedTargetCals = targetCals + selectedWorkoutCalories;
+  const selectedWeight = weights.find(w => new Date(w.date).toDateString() === selectedDateKey);
 
   // Score calculation
   const checkedCount = Object.values(checks).filter(Boolean).length;
@@ -308,12 +332,16 @@ export default function useShredOS() {
   };
 
   const handleCheck = (id) => {
-    const wasChecked = checks[id];
-    setChecks(prev => ({ ...prev, [id]: !prev[id] }));
+    if (!isToday) return;
+    const currentChecks = checksHistory[todayKey] || {};
+    const wasChecked = currentChecks[id];
+    setChecksHistory(prev => ({
+      ...prev,
+      [todayKey]: { ...(prev[todayKey] || {}), [id]: !wasChecked }
+    }));
     if (!wasChecked) {
       setStreak(s => s + 1);
-      // Check if this completes 100%
-      const newChecked = Object.values({ ...checks, [id]: true }).filter(Boolean).length;
+      const newChecked = Object.values({ ...currentChecks, [id]: true }).filter(Boolean).length;
       if (newChecked >= checklistItems.length) {
         playCompleteSound();
       } else {
@@ -465,10 +493,10 @@ ${compositionBlock}
   // Delete checklist item
   const deleteChecklistItem = (id) => {
     setChecklistItems(items => items.filter(item => item.id !== id));
-    setChecks(prev => {
-      const next = { ...prev };
-      delete next[id];
-      return next;
+    setChecksHistory(prev => {
+      const todayChecks = { ...(prev[todayKey] || {}) };
+      delete todayChecks[id];
+      return { ...prev, [todayKey]: todayChecks };
     });
   };
 
@@ -1064,7 +1092,7 @@ ${detectedMeal.name}
   const handleNewSprint = () => {
     setSprintPhotos({ before: null, after: null, aiComparison: null });
     setStartDate(null);
-    setChecks({});
+    setChecksHistory({});
     setWeights([]);
     setMeals([]);
     setMealHistory({});
@@ -1096,7 +1124,11 @@ ${detectedMeal.name}
     if (result && result.data) {
       const data = result.data;
       if (data.startDate) setStartDate(new Date(data.startDate));
-      if (data.checks) setChecks(data.checks);
+      if (data.checksHistory) {
+        setChecksHistory(data.checksHistory);
+      } else if (data.checks) {
+        setChecksHistory({ [new Date().toDateString()]: data.checks });
+      }
       if (data.weights) setWeights(data.weights);
       if (data.streak) setStreak(data.streak);
       if (data.messages) setMessages(data.messages);
@@ -1149,7 +1181,11 @@ ${detectedMeal.name}
       try {
         const data = JSON.parse(ev.target.result);
         if (data.startDate) setStartDate(new Date(data.startDate));
-        if (data.checks) setChecks(data.checks);
+        if (data.checksHistory) {
+          setChecksHistory(data.checksHistory);
+        } else if (data.checks) {
+          setChecksHistory({ [new Date().toDateString()]: data.checks });
+        }
         if (data.weights) setWeights(data.weights);
         if (data.streak) setStreak(data.streak);
         if (data.messages) setMessages(data.messages);
@@ -1281,7 +1317,8 @@ ${detectedMeal.name}
             tag: 'evening-track'
           });
         } else {
-          const checkedToday = Object.values(checks).filter(Boolean).length;
+          const todayChecksNotif = checksHistory[new Date().toDateString()] || {};
+          const checkedToday = Object.values(todayChecksNotif).filter(Boolean).length;
           if (checkedToday < checklistItems.length) {
             new Notification('ShredOS', {
               body: `${checkedToday}/${checklistItems.length} check\u00e9s. Finis ta checklist !`,
@@ -1296,7 +1333,30 @@ ${detectedMeal.name}
 
     notifIntervalRef.current = setInterval(checkNotifs, 60000); // check every minute
     return () => clearInterval(notifIntervalRef.current);
-  }, [notifSettings.enabled, notifSettings.morningTime, notifSettings.eveningTime, startDate, weights, mealHistory, checks, checklistItems]);
+  }, [notifSettings.enabled, notifSettings.morningTime, notifSettings.eveningTime, startDate, weights, mealHistory, checksHistory, checklistItems]);
+
+  // Date navigation handlers
+  const goToPrevDay = () => {
+    setSelectedDate(prev => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() - 1);
+      if (startDate && d < startDate) return prev;
+      return d;
+    });
+  };
+
+  const goToNextDay = () => {
+    setSelectedDate(prev => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + 1);
+      if (d > new Date()) return prev;
+      return d;
+    });
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
 
   return {
     // State
@@ -1320,6 +1380,9 @@ ${detectedMeal.name}
     videoRef, streamRef, fileInputRef,
     // Computed
     today, week, daysLeft, phase, targetCals, adjustedTargetCals, workoutCalories,
+    selectedDate, selectedDateKey, isToday, goToPrevDay, goToNextDay, goToToday,
+    selectedMeals, selectedConsumed, selectedWorkout, selectedWorkoutCalories,
+    selectedAdjustedTargetCals, selectedWeight,
     protein, fat, carbs, consumed, checkedCount, pct, weightDelta,
     // Handlers
     handleStartSprint, handleCheck, handleLogWeight, handleAddMeal, handleDeleteMeal,
