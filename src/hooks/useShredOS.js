@@ -81,6 +81,16 @@ export default function useShredOS() {
   const [syncStatus, setSyncStatus] = useState(null); // 'syncing' | 'synced' | 'error' | null
   const syncTimeoutRef = useRef(null);
 
+  // Notifications
+  const [notifSettings, setNotifSettings] = useState({
+    enabled: false,
+    morningTime: '08:00',
+    eveningTime: '20:00',
+    lastMorningNotif: null,
+    lastEveningNotif: null,
+  });
+  const notifIntervalRef = useRef(null);
+
   // User profile
   const [userProfile, setUserProfile] = useState({
     weight: USER.weight, height: USER.height, age: USER.age, tdee: USER.tdee,
@@ -123,6 +133,7 @@ export default function useShredOS() {
       if (data.sprintPhotos) setSprintPhotos(data.sprintPhotos);
       if (data.userProfile) setUserProfile(prev => ({ ...prev, ...data.userProfile }));
       if (data.syncCode) setSyncCode(data.syncCode);
+      if (data.notifSettings) setNotifSettings(prev => ({ ...prev, ...data.notifSettings }));
       if (data.workoutHistory) {
         setWorkoutHistory(data.workoutHistory);
         const today = new Date().toDateString();
@@ -167,6 +178,7 @@ export default function useShredOS() {
         sprintPhotos,
         userProfile,
         syncCode,
+        notifSettings,
       };
       localStorage.setItem('shredos', JSON.stringify(saveData));
 
@@ -181,7 +193,7 @@ export default function useShredOS() {
         }, 3000);
       }
     }
-  }, [startDate, checks, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile, syncCode]);
+  }, [startDate, checks, weights, streak, messages, meals, mealHistory, todayWorkout, workoutHistory, apiKey, apiProvider, checklistItems, bodyCompositions, sprintPhotos, userProfile, syncCode, notifSettings]);
 
   // Calculate current week
   const today = new Date();
@@ -1222,6 +1234,70 @@ ${detectedMeal.name}
     };
   })();
 
+  // Notification handlers
+  const handleEnableNotifs = async () => {
+    if (!('Notification' in window)) return false;
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      setNotifSettings(prev => ({ ...prev, enabled: true }));
+      return true;
+    }
+    return false;
+  };
+
+  const updateNotifSetting = (field, value) => {
+    setNotifSettings(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Notification check interval
+  useEffect(() => {
+    if (!notifSettings.enabled || !startDate) return;
+
+    const checkNotifs = () => {
+      const now = new Date();
+      const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const todayStr = now.toDateString();
+
+      // Morning reminder: weigh yourself
+      if (hhmm === notifSettings.morningTime && notifSettings.lastMorningNotif !== todayStr) {
+        const todayWeighed = weights.some(w => new Date(w.date).toDateString() === todayStr);
+        if (!todayWeighed) {
+          new Notification('ShredOS', {
+            body: 'Pense \u00e0 te peser ce matin !',
+            icon: '/icon-192.png',
+            tag: 'morning-weigh'
+          });
+          setNotifSettings(prev => ({ ...prev, lastMorningNotif: todayStr }));
+        }
+      }
+
+      // Evening reminder: track macros
+      if (hhmm === notifSettings.eveningTime && notifSettings.lastEveningNotif !== todayStr) {
+        const todayMeals = mealHistory[todayStr];
+        if (!todayMeals || todayMeals.length === 0) {
+          new Notification('ShredOS', {
+            body: 'Tu n\'as pas track\u00e9 tes repas aujourd\'hui !',
+            icon: '/icon-192.png',
+            tag: 'evening-track'
+          });
+        } else {
+          const checkedToday = Object.values(checks).filter(Boolean).length;
+          if (checkedToday < checklistItems.length) {
+            new Notification('ShredOS', {
+              body: `${checkedToday}/${checklistItems.length} check\u00e9s. Finis ta checklist !`,
+              icon: '/icon-192.png',
+              tag: 'evening-checklist'
+            });
+          }
+        }
+        setNotifSettings(prev => ({ ...prev, lastEveningNotif: todayStr }));
+      }
+    };
+
+    notifIntervalRef.current = setInterval(checkNotifs, 60000); // check every minute
+    return () => clearInterval(notifIntervalRef.current);
+  }, [notifSettings.enabled, notifSettings.morningTime, notifSettings.eveningTime, startDate, weights, mealHistory, checks, checklistItems]);
+
   return {
     // State
     isReady,
@@ -1263,5 +1339,7 @@ ${detectedMeal.name}
     handleExportJSON, handleImportJSON, importFileRef,
     // Weekly report
     weeklyReport,
+    // Notifications
+    notifSettings, handleEnableNotifs, updateNotifSetting,
   };
 }

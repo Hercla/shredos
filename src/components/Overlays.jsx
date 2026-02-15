@@ -17,7 +17,8 @@ function Overlays({
   onSprintPhotoBefore,
   userProfile, updateUserProfile,
   handleExportJSON, handleImportJSON, importFileRef,
-  syncCode, syncStatus, handleEnableSync, handleRestoreFromCloud
+  syncCode, syncStatus, handleEnableSync, handleRestoreFromCloud,
+  notifSettings, handleEnableNotifs, updateNotifSetting
 }) {
   const [restoreCode, setRestoreCode] = React.useState('');
   const [restoreStatus, setRestoreStatus] = React.useState(null);
@@ -167,6 +168,58 @@ function Overlays({
                 </div>
                 <span>TDEE auto (Mifflin-St Jeor)</span>
               </div>
+            </div>
+
+            {/* Notifications */}
+            <div className="sync-section">
+              <div style={{ fontSize: '11px', color: '#64748b', letterSpacing: '1px', marginBottom: '10px' }}>NOTIFICATIONS</div>
+
+              {notifSettings.enabled ? (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#22c55e', marginBottom: '10px' }}>
+                    Notifications activ{'\u00e9'}es
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px' }}>Matin (peser)</div>
+                      <input
+                        type="time"
+                        className="sync-restore-input"
+                        style={{ letterSpacing: 0, fontSize: '14px' }}
+                        value={notifSettings.morningTime}
+                        onChange={(e) => updateNotifSetting('morningTime', e.target.value)}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '10px', color: '#64748b', marginBottom: '4px' }}>Soir (tracker)</div>
+                      <input
+                        type="time"
+                        className="sync-restore-input"
+                        style={{ letterSpacing: 0, fontSize: '14px' }}
+                        value={notifSettings.eveningTime}
+                        onChange={(e) => updateNotifSetting('eveningTime', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    className="export-btn"
+                    style={{ marginTop: '10px', background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.25)', color: '#ef4444' }}
+                    onClick={() => updateNotifSetting('enabled', false)}
+                  >
+                    D{'\u00e9'}sactiver
+                  </button>
+                </div>
+              ) : (
+                <button className="export-btn" onClick={handleEnableNotifs}>
+                  Activer les notifications
+                </button>
+              )}
+
+              {!('Notification' in window) && (
+                <div style={{ fontSize: '11px', color: '#f59e0b', marginTop: '6px' }}>
+                  Notifications non support{'\u00e9'}es sur ce navigateur
+                </div>
+              )}
             </div>
 
             {/* Cloud Sync */}

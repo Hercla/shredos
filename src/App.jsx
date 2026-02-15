@@ -49,6 +49,9 @@ export default function App() {
         handleExportJSON={s.handleExportJSON}
         handleImportJSON={s.handleImportJSON}
         importFileRef={s.importFileRef}
+        notifSettings={s.notifSettings}
+        handleEnableNotifs={s.handleEnableNotifs}
+        updateNotifSetting={s.updateNotifSetting}
         syncCode={s.syncCode}
         syncStatus={s.syncStatus}
         handleEnableSync={s.handleEnableSync}
